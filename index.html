@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>BGMI Hack Key Panel - Owner: ultrabhai</title>
+<style>
+  body {
+    background: #121212;
+    color: #0f0;
+    font-family: monospace;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 30px;
+    min-height: 100vh;
+  }
+  .panel {
+    background: #000;
+    border: 2px solid #0f0;
+    padding: 30px;
+    border-radius: 10px;
+    width: 420px;
+    margin: 10px;
+    transition: all 0.4s ease;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .panel:not(.hidden) {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    background: #1f1f1f;
+    color: #0f0;
+    border: 1px solid #0f0;
+    border-radius: 5px;
+  }
+  input:focus {
+    border-color: #6f6;
+    outline: none;
+    box-shadow: 0 0 5px #0f0;
+  }
+  button {
+    padding: 10px;
+    width: 100%;
+    background: #0f0;
+    color: #000;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s;
+  }
+  button:hover {
+    background-color: #0c0;
+    color: #000;
+  }
+  .output {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #0f0;
+    text-align: center;
+    min-height: 20px;
+    transition: opacity 0.5s;
+  }
+  .hidden {
+    display: none;
+  }
+  .user-list {
+    margin-top: 10px;
+    border-top: 1px dashed #0f0;
+    padding-top: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+  .user-list div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .block-btn {
+    background: #f00;
+    color: #fff;
+    padding: 3px 10px;
+    font-size: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 5px;
+    flex-shrink: 0;
+  }
+  .unblock-btn {
+    background: #0f0;
+    color: #000;
+    padding: 3px 10px;
+    font-size: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 5px;
+    flex-shrink: 0;
+  }
+  .balance-control {
+    margin-top: 10px;
+    border-top: 1px solid #0f0;
+    padding-top: 15px;
+  }
+  .balance-control select, .balance-control input {
+    margin-top: 5px;
+  }
+  .balance-control button {
+    margin-top: 8px;
+  }
+  .server-control {
+    margin-top: 20px;
+    border-top: 2px solid #0f0;
+    padding-top: 15px;
+    text-align: center;
+  }
+  .server-status {
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 18px;
+  }
+  #userWelcome {
+    animation: slideIn 0.5s ease;
+  }
+  @keyframes slideIn {
+    from {
+      transform: translateX(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="loginPanel" class="panel">
+  <h2>Owner Login</h2>
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <div class="output" id="loginOutput"></div>
+</div>
+
+<div id="adminPanel" class="panel hidden">
+  <h2 id="userWelcome">Welcome ultrabhai</h2>
+
+  <div class="balance-control">
+    <h3>Manage User Balance</h3>
+    <select id="userSelect"></select>
+    <input type="number" id="userBalance" placeholder="Enter Balance" />
+    <button onclick="updateBalance()">Update Balance</button>
+  </div>
+
+  <div class="user-list" id="userList"></div>
+
+  <div class="balance-control">
+    <h3>Generate Login</h3>
+    <input type="text" id="newUser" placeholder="Username" />
+    <input type="password" id="newPass" placeholder="Password" />
+    <button onclick="createUser()">Generate User</button>
+  </div>
+
+  <div class="server-control">
+    <div class="server-status" id="serverStatus">Server is OFF</div>
+    <button onclick="toggleServer()">Toggle Server</button>
+  </div>
+</div>
+
+<script>
+  let users = {};
+  let blockedKeys = {};
+  let serverOn = false;
+
+  function login() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    const output = document.getElementById("loginOutput");
+
+    if (user === "ultrabhai" && pass === "ultrabhai") {
+      document.getElementById("loginPanel").classList.add("hidden");
+      document.getElementById("adminPanel").classList.remove("hidden");
+      output.textContent = "";
+      updateUserList();
+    } else {
+      output.textContent = "Invalid login.";
+    }
+  }
+
+  function createUser() {
+    const username = document.getElementById("newUser").value;
+    const password = document.getElementById("newPass").value;
+    if (!username || !password) return alert("Fill in all fields");
+    users[username] = { password, balance: 0 };
+    updateUserList();
+    alert("User created: " + username);
+  }
+
+  function updateUserList() {
+    const list = document.getElementById("userList");
+    const select = document.getElementById("userSelect");
+    list.innerHTML = "";
+    select.innerHTML = "";
+
+    Object.keys(users).forEach(u => {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        ${u} | Bal: ₹${users[u].balance}
+        ${blockedKeys[u] ? '<button class="unblock-btn" onclick="unblockKey(\'' + u + '\')">Unblock</button>' : '<button class="block-btn" onclick="blockKey(\'' + u + '\')">Block</button>'}
+      `;
+      list.appendChild(div);
+
+      const option = document.createElement("option");
+      option.value = u;
+      option.textContent = u;
+      select.appendChild(option);
+    });
+  }
+
+  function updateBalance() {
+    const u = document.getElementById("userSelect").value;
+    const amt = parseInt(document.getElementById("userBalance").value);
+    if (!users[u]) return;
+    users[u].balance = amt;
+    updateUserList();
+  }
+
+  function blockKey(user) {
+    blockedKeys[user] = true;
+    updateUserList();
+  }
+
+  function unblockKey(user) {
+    delete blockedKeys[user];
+    updateUserList();
+  }
+
+  function toggleServer() {
+    serverOn = !serverOn;
+    document.getElementById("serverStatus").textContent = serverOn ? "Server is ON" : "Server is OFF";
+  }
+</script>
+</body>
+</html>
